@@ -1,0 +1,23 @@
+    
+body{
+	background-attachment: auto;
+	padding-top:70px;
+	color: white;
+}
+
+.jumbotron{
+	background-color: transparent;
+}
+
+.deleteNote {
+	display: inline-block;
+}
+
+.previousNotes {
+	display: inline-block;
+	width: 90%;
+}
+
+#scrape {
+	margin: 8px 0px;
+}
