@@ -16,12 +16,7 @@ var request = require('request');
 
 var cheerio = require('cheerio');
 
-// mongoose.Promise = Promise;
-// mongoose.connect("" , {
-// 	useMongoClient: true
-// });
-
-mongoose.connect("mongodb://localhost/unit18Populater", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost/newyorktimes", { useNewUrlParser: true });
 
 var db = mongoose.connection;
 
@@ -52,7 +47,7 @@ db.once("open", function(){
 });
 
 app.get("/", function(req,res){
-	Article.find({"saved": false}).limit(20).exec(function(error,data){
+	db.Article.find({"saved": false}).limit(20).exec(function(error,data){
 		var hbsObject = {
 			article: data
 		};
@@ -62,7 +57,7 @@ app.get("/", function(req,res){
 });
 
 app.get("/saved", function(req,res){
-	Article.find({"saved": true}).populate("notes").exec(function(error, articles){
+	db.Article.find({"saved": true}).populate("notes").exec(function(error, articles){
 		var hbsObject = {
 			article: articles
 		};
@@ -71,7 +66,7 @@ app.get("/saved", function(req,res){
 });
 
 app.get("/scrape", function(req,res){
-	request("https://www.nytimes.com/", function(error,response, html){
+	request("https://www.nytimes.com/us/", function(error,response, html){
 		var $ = cheerio.load(html);
 		$("article").each(function(i,element){
 			var result = {};
@@ -79,23 +74,19 @@ app.get("/scrape", function(req,res){
 			result.summary = $(this).children(".summary").text();
 			result.link = $(this).children("h2").children("a").attr("href");
 
-			var entry = new Article(result);
-
-			entry.save(function(err, doc){
-				if(err){
-					console.log(err);
-				}
-				else{
-					console.log(doc);
-				}
-			});
+    db.Article.create(result)
+    .then(function(dbArticle){
+      console.log(dbArticle)
+    }).catch(function(dbArticle){
+      console.log(dbArticle)
+    })
 		});
 		res.send("Scrape Complete");
 	});
 });
 
 app.get("/articles", function(req,res){
-	Article.find({}).limit(20).exec(function(error, doc){
+	db.Article.find({}).limit(20).exec(function(error, doc){
 		if(error){
 			console.log(error);
 		}
@@ -119,7 +110,7 @@ app.get("/articles/:id", function(req,res){
 });
 
 app.post("/articles/save/:id", function(req,res){
-	Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": true})
+	db.Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": true})
 	.exec(function(err, doc){
 		if(err){
 			console.log(err);
@@ -131,7 +122,7 @@ app.post("/articles/save/:id", function(req,res){
 });
 
 app.post("/articles/delete/:id", function(req,res){
-	Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": false, "notes":[]})
+	db.Article.findOneAndUpdate({ "_id": req.params.id}, {"saved": false, "notes":[]})
 	.exec(function(err, doc){
 		if(err){
 			console.log(err);
@@ -153,7 +144,7 @@ app.post("notes/save/:id", function(req,res){
 			console.log(error);
 		}
 		else{
-			Article.findOneAndUpdate({ "_id": req.params.id}, {$push: { "notes": note } })
+			db.Article.findOneAndUpdate({ "_id": req.params.id}, {$push: { "notes": note } })
 			.exec(function(err){
 				if(err){
 					console.log(err);
@@ -174,7 +165,7 @@ app.delete("/notes/delete/:note_id/:article", function(req,res){
 			res.send(err);
 		}
 		else{
-			Article.findOneAndUpdate({"_id": req.params.article_id}, {$pull: {"notes": req.params.note_id}})
+			db.Article.findOneAndUpdate({"_id": req.params.article_id}, {$pull: {"notes": req.params.note_id}})
 				.exec(function(err){
 					if(err){
 						console.log(err);
