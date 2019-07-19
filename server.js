@@ -6,19 +6,19 @@ var logger = require('morgan');
 
 var mongoose = require('mongoose');
 
-var path = require('path');
+var axios = require('axios')
 
-var Note = require('./models/Note.js');
+// var Note = require('./models/Note.js');
 
-var Article = require('./models/Article.js');
+// var Article = require('./models/Article.js');
 
-var request = require('request');
+var path = require("path")
 
 var cheerio = require('cheerio');
 
 mongoose.connect("mongodb://localhost/newyorktimes", { useNewUrlParser: true });
 
-var db = mongoose.connection;
+var db = require("./models");
 
 var PORT = process.env.PORT || 3000;
 
@@ -38,13 +38,13 @@ app.engine("handlebars", exphbs({
 }));
 app.set("view engine", "handlebars");
 
-db.on("error", function(error){
-	console.log("Mongoose Error: ", error);
-});
+// db.once("error", function(error){
+// 	console.log("Mongoose Error: ", error);
+// });
 
-db.once("open", function(){
-	console.log("Mongoose connection successful.");
-});
+// db.once("open", function(){
+// 	console.log("Mongoose connection successful.");
+// });
 
 app.get("/", function(req,res){
 	db.Article.find({"saved": false}).limit(20).exec(function(error,data){
@@ -66,20 +66,22 @@ app.get("/saved", function(req,res){
 });
 
 app.get("/scrape", function(req,res){
-	request("https://www.nytimes.com/us/", function(error,response, html){
-		var $ = cheerio.load(html);
+  console.log("hello")
+	axios.get("https://www.npr.org/sections/national/").then(function(response){
+    console.log("response")
+		var $ = cheerio.load(response.data);
 		$("article").each(function(i,element){
 			var result = {};
-			result.title = $(this).children("h2").text();
-			result.summary = $(this).children(".summary").text();
-			result.link = $(this).children("h2").children("a").attr("href");
-
-    db.Article.create(result)
-    .then(function(dbArticle){
-      console.log(dbArticle)
-    }).catch(function(dbArticle){
-      console.log(dbArticle)
-    })
+			// result.title = $(this).children("h2").text();
+			// // result.summary = $(this).children(".summary").text();
+			 result.link = $(this).children(".teaser").children("a").attr("href");
+      console.log(result)
+    // db.Article.create(result)
+    // .then(function(dbArticle){
+    //   console.log(dbArticle)
+    // }).catch(function(dbArticle){
+    //   console.log(dbArticle)
+    // })
 		});
 		res.send("Scrape Complete");
 	});

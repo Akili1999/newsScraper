@@ -1,4 +1,5 @@
 $("#scrape").on("click", function(){
+	console.log("hello")
 	$.ajax({
 		method: "GET",
 		url: "/scrape",
@@ -32,7 +33,7 @@ $(".saveNote").on("click", function(){
 			method: "POST",
 			url: "/notes.save/" + thisId,
 			data:{
-				text: $("#noteText" + thisId).val()
+			text: $("#noteText" + thisId).val()
 			}
 		}).done(function(data){
 			console.log(data)
@@ -46,7 +47,7 @@ $(".saveNote").on("click", function(){
 
 $(".deleteNote").on("Click", function(){
 	var noteId = $(this).attr("data-note-id");
-	var artcileId = $(this).attr("data-article-id");
+	var articleId = $(this).attr("data-article-id");
 	$.ajax({
 		mehtod: "DELETE",
 		url: "/notes/delete/" + noteId + "/" + articleId
